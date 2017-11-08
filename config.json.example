@@ -1,6 +1,6 @@
 {
-  "lat": 52.482154,
-  "long": -1.894503,
+  "lat": 0,
+  "long": 0,
   "schedule": [{
     "cleanup": {
       "disabled": false,

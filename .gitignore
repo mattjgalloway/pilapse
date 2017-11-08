@@ -4,3 +4,4 @@
 node_modules
 pilapse.sql
 *.log
+config.json
