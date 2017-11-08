@@ -42,20 +42,16 @@ function upload (db, config, file) {
   });
 }
 
-module.exports = (logger, db, config, photoPath, videoPath) => Promise.resolve()
+module.exports = (logger, db, config, photoPath) => Promise.resolve()
   .then(() => {
     if (config.disabled) {
       throw new Error('TASK_DISABLED');
     }
 
     /* Get the files */
-    return Promise.all([
-      db.getFilesToUpload(photoPath),
-      db.getFilesToUpload(videoPath)
-    ]).then(([ photos, videos ]) => {
-      const uploads = []
-        .concat(photos)
-        .concat(videos);
+    db.getFilesToUpload(photoPath)
+    .then((photos) => {
+      const uploads = photos;
 
       const pause = config.pause || 10000;
 

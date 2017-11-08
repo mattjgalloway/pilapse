@@ -5,9 +5,7 @@ Configures a timelapse camera for a Raspberry Pi.
 ## Features
 
  - Use sunrise/sunset times for your location to decide when to record
- - Automatically generate a video from the images
- - Backup images/videos to Dropbox
- - Automatically tweet the video once generated
+ - Backup images to Dropbox
 
 > This is based on an idea by [Alex Ellis](http://blog.alexellis.io/raspberry-pi-timelapse)
 >
@@ -36,7 +34,7 @@ docker run --name pilapse -v /path/to/image/store:/var/image -v $PWD/config.json
 
 # Config
 
-The config allows granular control over the timelapse pictures and videos.
+The config allows granular control over the timelapse pictures.
 
 ## Sample config.json
 
@@ -66,11 +64,6 @@ The config allows granular control over the timelapse pictures and videos.
         "-hf",
         "-vf"
       ]
-    },
-    "video": {
-      "disabled": false,
-      "interval": "0 23 * * *",
-      "savePath": "/var/image/daily-video"
     }
   }]
 }
@@ -89,7 +82,6 @@ Get lat/long coords from [www.latlong.net](http://www.latlong.net)
 - `cleanup`: Specifies how to cleanup uploaded/generated images
 - `dropbox`: Specifies how to save to dropbox
 - `photo`: Specifies how to take photos
-- `video`: Specifies how to generate a video from the photos
 
 ### Cleanup
 
@@ -112,8 +104,3 @@ Get lat/long coords from [www.latlong.net](http://www.latlong.net)
 - `raspistillOpts`: Array of options sent with the [raspistill](https://www.raspberrypi.org/documentation/usage/camera/raspicam/raspistill.md) command
 - `savePath`: Specified where to save your files locally
 - `startTime`: Time to start taking photos - will use sunrise time if not set
-
-### Video
-- `disabled`: If you want to disable it, set to `true`
-- `interval`: [Cron notation](https://crontab.guru) to decide when this should run
-- `savePath`: Specified where to save your files locally

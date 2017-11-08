@@ -2,8 +2,7 @@
  * PiLapse
  *
  * PiLapse is a small utility that uses a Raspberry
- * Pi to take photos at an interval and then convert
- * them into a video that can then be tweeted.
+ * Pi to take photos at an interval
  */
 
 /* Node modules */
