@@ -1,6 +1,4 @@
-# Created by .ignore support plugin (hsz.mobi)
-.idea
-/sunriseSunset.json
+sunriseSunset.json
 node_modules
 pilapse.sql
 *.log
