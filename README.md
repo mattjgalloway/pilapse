@@ -57,12 +57,7 @@ The config allows granular control over the timelapse pictures.
       "disabled": false,
       "group": "D",
       "interval": "* * * * *",
-      "savePath": "/var/image/daily",
-      "startTime": "04:00",
-      "endTime": "22:00",
       "raspistillOpts": [
-        "-hf",
-        "-vf"
       ]
     }
   }]
@@ -98,9 +93,6 @@ Get lat/long coords from [www.latlong.net](http://www.latlong.net)
 ### Photo
 
 - `disabled`: If you want to disable it, set to `true`
-- `endTime`: Time to stop taking photos - will use sunset time if not set
 - `group`: Decides how to group the photos. By default, it's `D` (daily). Can also have `M` (monthly) and `Y` (yearly)
 - `interval`: [Cron notation](https://crontab.guru) to decide when this should run
 - `raspistillOpts`: Array of options sent with the [raspistill](https://www.raspberrypi.org/documentation/usage/camera/raspicam/raspistill.md) command
-- `savePath`: Specified where to save your files locally
-- `startTime`: Time to start taking photos - will use sunrise time if not set
