@@ -16,7 +16,6 @@
       "disabled": false,
       "group": "D",
       "interval": "* * * * *",
-      "savePath": "/var/image/daily",
       "raspistillOpts": [
       ]
     }

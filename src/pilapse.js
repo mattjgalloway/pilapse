@@ -37,9 +37,10 @@ logger.info({
   code: 'PLSTART'
 }, 'PiLapse started');
 
-const sunriseTimes = path.join(__dirname, '..', 'sunriseSunset.json');
+const sunriseTimes = path.join(__dirname, '..', 'data', 'sunriseSunset.json');
+const sqlFile = path.join(__dirname, '..', 'data', 'pilapse.sql');
 
-const db = new Database('./pilapse.sql', logger);
+const db = new Database(sqlFile, logger);
 
 const files = new FilesStore(db);
 

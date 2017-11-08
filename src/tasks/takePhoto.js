@@ -63,10 +63,7 @@ module.exports = (logger, db, config, sunriseSunset) => Promise.resolve()
 
     const groupName = moment().format(groupFormat);
 
-    const savePath = [
-      config.savePath,
-      groupName
-    ].join(path.sep);
+    const savePath = path.join(__dirname, '..', '..', 'data', 'images', groupName);
 
     const now = moment().unix();
 
