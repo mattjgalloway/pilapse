@@ -1,0 +1,14 @@
+[Unit]
+Description=PiLapse Timelapse
+After=syslog.target network-online.target
+
+[Service]
+Type=simple
+User=pilapse
+ExecStart=/bin/sh -c '/usr/bin/node /var/lib/pilapse/src/pilapse.js | /var/lib/pilapse/node_modules/.bin/bunyan'
+Restart=on-failure
+RestartSec=10
+KillMode=control-group
+
+[Install]
+WantedBy=multi-user.target
