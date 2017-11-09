@@ -16,16 +16,16 @@ module.exports = class FileStore {
 
   createTable () {
     const sql = 'CREATE TABLE IF NOT EXISTS `files` ' +
-      '(`id` INTEGER,`fileName` TEXT UNIQUE,`uploaded` INTEGER NOT NULL DEFAULT 0,' +
+      '(`id` INTEGER,`filename` TEXT UNIQUE,`uploaded` INTEGER NOT NULL DEFAULT 0,' +
       '`group` TEXT,`type` TEXT,`created` TEXT,`updated` TEXT, ' +
       'PRIMARY KEY(`id`));';
 
     return this._db.query(sql);
   }
 
-  getByFileName (fileName) {
-    return this._db.query('SELECT * FROM files WHERE fileName = ?', [
-      fileName
+  getByFileName (filename) {
+    return this._db.query('SELECT * FROM files WHERE filename = ?', [
+      filename
     ]);
   }
 
@@ -36,7 +36,7 @@ module.exports = class FileStore {
   }
 
   getFilesToUpload (filePath) {
-    return this._db.query('SELECT * FROM files WHERE fileName LIKE ? AND uploaded = ?', [
+    return this._db.query('SELECT * FROM files WHERE filename LIKE ? AND uploaded = ?', [
       `${filePath}%`,
       0
     ]);

@@ -16,12 +16,12 @@ function upload (db, config, file) {
     accessToken: config.accessToken
   });
 
-  const { fileName } = file;
+  const { filename } = file;
 
-  const remotePath = path.join(config.savePath, fileName);
+  const remotePath = path.join(config.savePath, filename);
 
   return new Promise((resolve, reject) => {
-    fs.readFile(fileName, (err, contents) => {
+    fs.readFile(filename, (err, contents) => {
       if (err) {
         reject(err);
         return;

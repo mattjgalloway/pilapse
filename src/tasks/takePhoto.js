@@ -94,7 +94,7 @@ module.exports = (logger, db, config, sunriseSunset) => Promise.resolve()
         resolve();
       });
     }).then(() => {
-      const fileName = [
+      const filename = [
         savePath,
         `img_${now}.jpg`
       ].join(path.sep);
@@ -114,7 +114,7 @@ module.exports = (logger, db, config, sunriseSunset) => Promise.resolve()
       ]);
 
       /* Create the command */
-      const cmd = `/opt/vc/bin/raspistill ${opts.join(' ')} -o ${fileName}`;
+      const cmd = `/opt/vc/bin/raspistill ${opts.join(' ')} -o ${filename}`;
 
       logger.info({
         cmd,
@@ -135,16 +135,16 @@ module.exports = (logger, db, config, sunriseSunset) => Promise.resolve()
 
           resolve({
             cmd,
-            fileName
+            filename
           });
         });
-      }).then(({ cmd, fileName }) => db.save({
+      }).then(({ cmd, filename }) => db.save({
         type: 'img',
-        fileName,
+        filename,
         group: savePath
       }).then(() => ({
         cmd,
-        fileName
+        filename
       })));
     });
   });
