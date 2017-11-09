@@ -40,9 +40,16 @@ module.exports = class SQLite {
           this._log.info({
             sql,
             args,
-            result,
+            results: result.length,
             code: 'DBRESULT'
           }, 'Database result');
+
+          this._log.debug({
+            sql,
+            args,
+            result,
+            code: 'DBRESULTDBG'
+          }, 'Database result (debug)');
 
           resolve(result);
         });
