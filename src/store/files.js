@@ -16,8 +16,13 @@ module.exports = class FileStore {
 
   createTable () {
     const sql = 'CREATE TABLE IF NOT EXISTS `files` ' +
-      '(`id` INTEGER,`filename` TEXT UNIQUE,`uploaded` INTEGER NOT NULL DEFAULT 0,' +
-      '`group` TEXT,`type` TEXT,`created` TEXT,`updated` TEXT, ' +
+      '(`id` INTEGER,' +
+      '`filename` TEXT UNIQUE,' +
+      '`uploaded` INTEGER NOT NULL DEFAULT 0,' +
+      '`group` TEXT,' +
+      '`type` TEXT,' +
+      '`created` TEXT,' +
+      '`updated` TEXT, ' +
       'PRIMARY KEY(`id`));';
 
     return this._db.query(sql);
