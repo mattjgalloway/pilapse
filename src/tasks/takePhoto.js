@@ -61,11 +61,12 @@ module.exports = (logger, db, config, sunriseSunset) => Promise.resolve()
       groupFormat = 'YYYY-MM';
     }
 
-    const groupName = moment().format(groupFormat);
-
-    const savePath = path.join(__dirname, '..', '..', 'data', 'images', groupName);
-
     const now = moment().unix();
+    const groupName = moment().format(groupFormat);
+    const groupPath = path.join(db.getImagesDirectory(), groupName);
+    const filename = `img_${now}.jpg`;
+    const fullPath = path.join(groupPath, filename);
+    const filenameWithGroup = path.join(groupName, filename);
 
     if (obj.isDaylight() === false) {
       /* Nothing to do */
@@ -81,11 +82,11 @@ module.exports = (logger, db, config, sunriseSunset) => Promise.resolve()
     return new Promise((resolve, reject) => {
       /* Create the path where the photos are to be stored */
       logger.info({
-        savePath,
+        groupPath,
         code: 'DIRCREATE'
       }, 'Creating some directories');
 
-      mkdirp(savePath, err => {
+      mkdirp(groupPath, err => {
         if (err) {
           reject(err);
           return;
@@ -94,11 +95,6 @@ module.exports = (logger, db, config, sunriseSunset) => Promise.resolve()
         resolve();
       });
     }).then(() => {
-      const filename = [
-        savePath,
-        `img_${now}.jpg`
-      ].join(path.sep);
-
       /* Set the options */
       const opts = (config.raspistillOpts || []).reduce((result, opt) => {
         result.push(opt);
@@ -114,7 +110,7 @@ module.exports = (logger, db, config, sunriseSunset) => Promise.resolve()
       ]);
 
       /* Create the command */
-      const cmd = `/opt/vc/bin/raspistill ${opts.join(' ')} -o ${filename}`;
+      const cmd = `/opt/vc/bin/raspistill ${opts.join(' ')} -o ${fullPath}`;
 
       logger.info({
         cmd,
@@ -133,18 +129,12 @@ module.exports = (logger, db, config, sunriseSunset) => Promise.resolve()
             cmd: 'NEWPHOTOSUCCESS'
           }, 'Photo successfully taken');
 
-          resolve({
-            cmd,
-            filename
-          });
+          resolve(cmd);
         });
-      }).then(({ cmd, filename }) => db.save({
+      }).then(cmd => db.save({
         type: 'img',
-        filename,
-        group: savePath
-      }).then(() => ({
-        cmd,
-        filename
-      })));
+        filename: filenameWithGroup,
+        group: groupName
+      }).then(() => (cmd)));
     });
   });

@@ -6,6 +6,7 @@
 
 /* Third-party modules */
 const rimraf = require('rimraf');
+const path = require('path');
 
 /* Files */
 
@@ -19,7 +20,8 @@ module.exports = (db, config) => Promise.resolve()
   })
   .then(files => {
     const tasks = files.map(({ filename }) => new Promise((resolve, reject) => {
-      rimraf(filename, {
+      const fullPath = path.join(db.getImagesDirectory(), filename);
+      rimraf(fullPath, {
         disableGlob: true
       }, err => {
         if (err) {

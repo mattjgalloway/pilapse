@@ -6,6 +6,7 @@
 
 /* Third-party modules */
 const _ = require('lodash');
+const path = require('path');
 
 /* Files */
 
@@ -28,7 +29,15 @@ module.exports = class FileStore {
     return this._db.query(sql);
   }
 
-  getByFileName (filename) {
+  getImagesDirectory () {
+    return path.join(__dirname, '..', '..', 'data', 'images');
+  }
+
+  getFullPathForFilename (filename) {
+    return path.join(this.getImagesDirectory(), filename);
+  }
+
+  getByFilename (filename) {
     return this._db.query('SELECT * FROM files WHERE filename = ?', [
       filename
     ]);
@@ -40,9 +49,8 @@ module.exports = class FileStore {
     ]);
   }
 
-  getFilesToUpload (filePath) {
-    return this._db.query('SELECT * FROM files WHERE filename LIKE ? AND uploaded = ?', [
-      `${filePath}%`,
+  getFilesToUpload () {
+    return this._db.query('SELECT * FROM files WHERE uploaded = ?', [
       0
     ]);
   }

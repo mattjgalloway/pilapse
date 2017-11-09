@@ -17,11 +17,11 @@ function upload (db, config, file) {
   });
 
   const { filename } = file;
-
+  const localPath = path.join(db.getImagesDirectory(), filename);
   const remotePath = path.join(config.savePath, filename);
 
   return new Promise((resolve, reject) => {
-    fs.readFile(filename, (err, contents) => {
+    fs.readFile(localPath, (err, contents) => {
       if (err) {
         reject(err);
         return;
@@ -42,14 +42,14 @@ function upload (db, config, file) {
   });
 }
 
-module.exports = (logger, db, config, photoPath) => Promise.resolve()
+module.exports = (logger, db, config) => Promise.resolve()
   .then(() => {
     if (config.disabled) {
       throw new Error('TASK_DISABLED');
     }
 
     /* Get the files */
-    db.getFilesToUpload(photoPath)
+    db.getFilesToUpload()
     .then((photos) => {
       const uploads = photos;
 
