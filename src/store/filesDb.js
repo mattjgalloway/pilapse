@@ -1,16 +1,15 @@
 /**
- * files
+ * filesDb
  */
 
 /* Node modules */
 
 /* Third-party modules */
 const _ = require('lodash');
-const path = require('path');
 
 /* Files */
 
-module.exports = class FileStore {
+module.exports = class FileDb {
   constructor (db) {
     this._db = db;
   }
@@ -27,14 +26,6 @@ module.exports = class FileStore {
       'PRIMARY KEY(`id`));';
 
     return this._db.query(sql);
-  }
-
-  getImagesDirectory () {
-    return path.join(__dirname, '..', '..', 'data', 'images');
-  }
-
-  getFullPathForFilename (filename) {
-    return path.join(this.getImagesDirectory(), filename);
   }
 
   getByFilename (filename) {

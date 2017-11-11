@@ -11,14 +11,12 @@ const Dropbox = require('dropbox');
 
 /* Files */
 
-function upload (db, config, file) {
+function upload (config, localPath, remotePath, mode) {
+  mode = mode || 'add';
+
   const dbx = new Dropbox({
     accessToken: config.accessToken
   });
-
-  const { filename } = file;
-  const localPath = path.join(db.getImagesDirectory(), filename);
-  const remotePath = path.join(config.savePath, filename);
 
   return new Promise((resolve, reject) => {
     fs.readFile(localPath, (err, contents) => {
@@ -32,17 +30,13 @@ function upload (db, config, file) {
   }).then(contents => dbx.filesUpload({
     path: remotePath,
     contents,
+    mode,
     autorename: true,
     mute: true
-  })).then(result => {
-    file.uploaded = 1;
-
-    return db.save(file)
-      .then(() => result);
-  });
+  }));
 }
 
-module.exports = (logger, db, config) => Promise.resolve()
+module.exports = (logger, db, dataStore, config) => Promise.resolve()
   .then(() => {
     if (config.disabled) {
       throw new Error('TASK_DISABLED');
@@ -56,7 +50,16 @@ module.exports = (logger, db, config) => Promise.resolve()
       const pause = config.pause || 10000;
 
       return uploads.reduce((thenable, file) => thenable
-        .then(() => upload(db, config, file))
+        .then(() => {
+          const { filename } = file;
+          const localPath = path.join(dataStore.getImagesDirectory(), filename);
+          const remotePath = path.join(config.savePath, filename);
+          return upload(config, localPath, remotePath)
+            .then(result => {
+              file.uploaded = 1;
+              return db.save(file).then(() => result);
+            });
+        })
         .then(() => {
           logger.info({
             file,
@@ -66,5 +69,10 @@ module.exports = (logger, db, config) => Promise.resolve()
 
           return new Promise(resolve => setTimeout(resolve, pause));
         }), Promise.resolve());
+    })
+    .then(() => {
+      const localPath = dataStore.getSQLFilePath();
+      const remotePath = path.join(config.savePath, path.basename(localPath));
+      return upload(config, localPath, remotePath, 'overwrite');
     });
   });

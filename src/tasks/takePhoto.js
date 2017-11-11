@@ -13,7 +13,7 @@ const moment = require('moment');
 /* Files */
 const SunriseSunset = require('../models/sunriseSunset');
 
-module.exports = (logger, db, config, sunriseSunset) => Promise.resolve()
+module.exports = (logger, db, dataStore, config, sunriseSunset) => Promise.resolve()
   .then(() => {
     if (config.disabled) {
       /* Task has been disabled */
@@ -63,7 +63,7 @@ module.exports = (logger, db, config, sunriseSunset) => Promise.resolve()
 
     const now = moment().unix();
     const groupName = moment().format(groupFormat);
-    const groupPath = path.join(db.getImagesDirectory(), groupName);
+    const groupPath = path.join(dataStore.getImagesDirectory(), groupName);
     const filename = `img_${now}.jpg`;
     const fullPath = path.join(groupPath, filename);
     const filenameWithGroup = path.join(groupName, filename);

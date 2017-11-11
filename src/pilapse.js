@@ -18,7 +18,8 @@ const config = require('../config.json');
 const cleanupData = require('./tasks/cleanup');
 const Database = require('./lib/database');
 const dropboxBackup = require('./tasks/dropboxBackup');
-const FilesStore = require('./store/files');
+const FilesDb = require('./store/filesDb');
+const DataStore = require('./store/dataStore');
 const sunriseSunset = require('./tasks/sunriseSunset');
 const takePhoto = require('./tasks/takePhoto');
 
@@ -36,12 +37,14 @@ logger.info({
   code: 'PLSTART'
 }, 'PiLapse started');
 
-const sunriseTimes = path.join(__dirname, '..', 'data', 'sunriseSunset.json');
-const sqlFile = path.join(__dirname, '..', 'data', 'pilapse.sql');
+const dataStore = new DataStore();
+
+const sunriseTimes = dataStore.getSunriseSunsetFilePath();
+const sqlFile = dataStore.getSQLFilePath();
 
 const db = new Database(sqlFile, logger);
 
-const files = new FilesStore(db);
+const filesDb = new FilesDb(db);
 
 const taskRunner = (id, codeName, taskName, fn) => {
   const uuid = v4();
@@ -82,7 +85,7 @@ const taskRunner = (id, codeName, taskName, fn) => {
 };
 
 Promise.all([
-  files.createTable()
+  filesDb.createTable()
 ]).then(() => {
   /* Set up the user's jobs */
   config.schedule.forEach(({
@@ -93,14 +96,15 @@ Promise.all([
     /* Schedule the update of sunrise/sunset and taking of the photo */
     cron.schedule(photo.interval, () => {
       taskRunner(id, 'PHOTO', 'TAKE_PHOTO', () => sunriseSunset(logger, sunriseTimes, config.lat, config.long)
-        .then(times => takePhoto(logger, files, photo, times)));
+        .then(times => takePhoto(logger, filesDb, dataStore, photo, times)));
     });
 
     /* Schedule the backup of the photos to dropbox */
     cron.schedule(dropbox.interval, () => {
       taskRunner(id, 'DROPBOX', 'SAVE_TO_DROPBOX', () => dropboxBackup(
         logger,
-        files,
+        filesDb,
+        dataStore,
         dropbox,
         photo.savePath
       ));
@@ -108,7 +112,7 @@ Promise.all([
 
     /* Cleanup uploaded/generated data */
     cron.schedule(cleanup.interval, () => {
-      taskRunner(id, 'DATACLEANUP', 'CLEANUP_OLD_DATA', () => cleanupData(files, cleanup));
+      taskRunner(id, 'DATACLEANUP', 'CLEANUP_OLD_DATA', () => cleanupData(filesDb, dataStore, cleanup));
     });
   });
 }).catch(err => {

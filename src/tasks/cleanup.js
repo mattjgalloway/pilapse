@@ -10,7 +10,7 @@ const path = require('path');
 
 /* Files */
 
-module.exports = (db, config) => Promise.resolve()
+module.exports = (db, dataStore, config) => Promise.resolve()
   .then(() => {
     if (config.disabled) {
       throw new Error('TASK_DISABLED');
@@ -20,7 +20,7 @@ module.exports = (db, config) => Promise.resolve()
   })
   .then(files => {
     const tasks = files.map(({ filename }) => new Promise((resolve, reject) => {
-      const fullPath = path.join(db.getImagesDirectory(), filename);
+      const fullPath = path.join(dataStore.getImagesDirectory(), filename);
       rimraf(fullPath, {
         disableGlob: true
       }, err => {
