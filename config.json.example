@@ -1,6 +1,7 @@
 {
   "lat": 0,
   "long": 0,
+  "dropboxBase": "<PATH_TO_DROPBOX_PILAPSE_FOLDER>",
   "schedule": [{
     "cleanup": {
       "disabled": false,

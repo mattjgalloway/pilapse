@@ -42,6 +42,7 @@ The config allows granular control over the timelapse pictures.
 {
   "lat": 52.482154,
   "long": -1.894503,
+  "dropboxBase": "/Users/bob/Dropbox/Apps/PiLapse",
   "schedule": [{
     "cleanup": {
       "disabled": false,
