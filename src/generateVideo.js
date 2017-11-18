@@ -42,6 +42,7 @@ const makeTmp = new Promise((resolve, reject) => {
 });
 
 const fetchFiles = db.query('SELECT * FROM files ORDER BY created ASC');
+var tempDirectory = undefined;
 
 Promise.all([
   makeTmp,
@@ -49,12 +50,13 @@ Promise.all([
 ])
 .then(([ tmpDir, files ]) => {
   logger.info('Temporary directory: ' + tmpDir);
+  tempDirectory = tmpDir;
 
   const allCopies = files.map((file, i) => {
     const tmpFilenumber = ("00000000" + i).slice(-8);
     const tmpFilename = "image" + tmpFilenumber + ".jpg";
     const localFile = path.join(baseDirectory, file.filename);
-    const tmpFile = path.join(tmpDir, tmpFilename);
+    const tmpFile = path.join(tempDirectory, tmpFilename);
     return new Promise((resolve, reject) => {
       fs.copyFile(localFile, tmpFile, (err) => {
         if (err) {
@@ -69,16 +71,13 @@ Promise.all([
     });
   });
 
-  return Promise.all(allCopies)
-    .then(() => {
-      return tmpDir;
-    });
+  return Promise.all(allCopies);
 })
-.then((tmpDir) => {
+.then(() => {
   return new Promise((resolve, reject) => {
     logger.info('Creating video...');
 
-    const cmd = 'ffmpeg -y -r 24 -i ' + path.join(tmpDir, "image%08d.jpg") + ' -vcodec libx264 -pix_fmt yuv420p -q:v 3 ' + videoFile;
+    const cmd = 'ffmpeg -y -r 24 -i ' + path.join(tempDirectory, "image%08d.jpg") + ' -vcodec libx264 -pix_fmt yuv420p -q:v 3 ' + videoFile;
     exec(cmd, (err) => {
       if (err) {
         reject(err);
@@ -89,23 +88,28 @@ Promise.all([
 
       resolve();
     });
-  }).then(() => {
-    return tmpDir;
   });
 })
-.then((tmpDir) => {
-  return new Promise((resolve, reject) => {
-    rimraf(tmpDir, {
-        disableGlob: true
-    }, err => {
-      if (err) {
-        reject(err);
-        return;
-      }
+.catch(err => {
+  logger.error('Error:\n' + err);
+})
+.then(() => {
+  if (tempDirectory !== undefined) {
+    return new Promise((resolve, reject) => {
+      rimraf(tempDirectory, {
+          disableGlob: true
+      }, err => {
+        if (err) {
+          reject(err);
+          return;
+        }
 
-      resolve();
+        resolve();
+      });
     });
-  });
+  } else {
+    return Promise.resolve();
+  }
 })
 .catch(err => {
   logger.error('Error:\n' + err);
