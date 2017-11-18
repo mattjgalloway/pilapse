@@ -52,8 +52,9 @@ Promise.all([
   logger.info('Temporary directory: ' + tmpDir);
   tempDirectory = tmpDir;
 
+  var offset = 0;
   const allCopies = files.map((file, i) => {
-    const tmpFilenumber = ("00000000" + i).slice(-8);
+    const tmpFilenumber = ("00000000" + (i + offset)).slice(-8);
     const tmpFilename = "image" + tmpFilenumber + ".jpg";
     const localFile = path.join(baseDirectory, file.filename);
     const tmpFile = path.join(tempDirectory, tmpFilename);
@@ -68,6 +69,10 @@ Promise.all([
   
         resolve();
       });
+    }).catch((err) => {
+      // This is likely because the image doesn't exist. Just skip it!
+      offset++;
+      logger.info('Failed to copy file. Just ignoring this one.');
     });
   });
 
