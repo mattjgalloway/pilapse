@@ -20,5 +20,10 @@
       "raspistillOpts": [
       ]
     }
+  }],
+  "generateVideo": [{
+    "name": "daily",
+    "interval": "0 12 * * *",
+    "tolerance": 3600
   }]
 }
