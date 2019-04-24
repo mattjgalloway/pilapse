@@ -67,17 +67,29 @@ function makeTempDirectory() {
 }
 
 function copyFile(fromFile, toFile, date, watermark) {
-  return new Promise((resolve, reject) => {
-    const watermarkCmd = ' -font CourierNew -pointsize 20 -fill white -undercolor black -gravity SouthWest -annotate +10+10 "' + date + '" ';
-    const cmd = 'convert ' + fromFile + (watermark ? watermarkCmd : " ") + toFile;
-    exec(cmd, (err) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-      resolve();
+  if (watermark) {
+    return new Promise((resolve, reject) => {
+      const watermarkCmd = ' -font CourierNew -pointsize 20 -fill white -undercolor black -gravity SouthWest -annotate +10+10 "' + date + '" ';
+      const cmd = 'convert ' + fromFile + watermarkCmd + toFile;
+      exec(cmd, (err) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve();
+      });
     });
-  });
+  } else {
+    return new Promise((resolve, reject) => {
+      fs.copyFile(fromFile, toFile, (err) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve();
+      });
+    });
+  }
 }
 
 function handleGenerationConfig(generationConfig, files, tempDirectory) {
