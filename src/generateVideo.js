@@ -37,6 +37,13 @@ if (allGenerations.length === 0) {
 
 const db = new Database(sqlFile, logger);
 
+function reduceArrayToPromises(items, reducer) {
+  return items.reduce(
+    (p, item) => p.then(() => reducer(item)),
+    Promise.resolve()
+  );
+}
+
 function makeTempDirectory() {
   return new Promise((resolve, reject) => {
     fs.mkdtemp(path.join(os.tmpdir(), 'pilapse-'), (err, folder) => {
@@ -45,6 +52,19 @@ function makeTempDirectory() {
         return;
       }
       resolve(folder);
+    });
+  });
+}
+
+function copyFile(fromFile, toFile, date) {
+  return new Promise((resolve, reject) => {
+    const cmd = 'convert ' + fromFile + ' -font CourierNew -pointsize 20 -fill white -undercolor black -gravity SouthWest -annotate +10+10 "' + date + '" ' + toFile;
+    exec(cmd, (err) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve();
     });
   });
 }
@@ -64,9 +84,10 @@ function handleGenerationConfig(generationConfig, files, tempDirectory) {
   var i = 0;
   var lastFile = files[0];
 
-  const allCopies = files.reduce((arr, thisFile) => {
+  const copiesChain = reduceArrayToPromises(files, (thisFile) => {
     const thisDate = Date.parse(thisFile.created);
     const nextNeededDate = Date.parse(next.value);
+
     var foundFile = null;
 
     if (thisDate > nextNeededDate) {
@@ -74,7 +95,9 @@ function handleGenerationConfig(generationConfig, files, tempDirectory) {
       const lastDateDiff = Math.abs(nextNeededDate - Date.parse(lastFile.created));
       if (thisDateDiff > tolerance && lastDateDiff > tolerance) {
         logger.info("Skipping iteration at " + next.value + " because no file found within tolerance.");
-        next = interval.next();
+        while (Date.parse(next.value) < thisDate) {
+          next = interval.next();
+        }
       } else if (thisDateDiff < lastDateDiff) {
         foundFile = thisFile;
       } else {
@@ -82,41 +105,28 @@ function handleGenerationConfig(generationConfig, files, tempDirectory) {
       }
     }
 
+    var nextChain = null;
     if (foundFile !== null) {
       logger.info("Found file at " + foundFile.created + " for iteration at " + next.value);
       next = interval.next();
 
-      const promise = new Promise((resolve, reject) => {
-        const localFile = path.join(baseDirectory, foundFile.filename);
-        if (!fs.existsSync(localFile)) {
-          // This is likely because the image doesn't exist. Just skip it!
-          logger.info('Failed to copy file. Just ignoring this one.');
-        }
-
+      const localFile = path.join(baseDirectory, foundFile.filename);
+      if (!fs.existsSync(localFile)) {
+        // This is likely because the image doesn't exist. Just skip it!
+        logger.info('Failed to copy file. Just ignoring this one.');
+      } else {
         const tmpFilenumber = ("00000000" + i++).slice(-8);
         const tmpFilename = "image" + tmpFilenumber + ".jpg";
         const tmpFile = path.join(tempDirectory, tmpFilename);
-        fs.copyFile(localFile, tmpFile, (err) => {
-          if (err) {
-            reject(err);
-            return;
-          }
-  
-          logger.info('Copied ' + localFile + ' to ' + tmpFile);
-          i++;
-  
-          resolve();
-        });
-      });
-
-      arr.push(promise);
+        nextChain = copyFile(localFile, tmpFile, next.value);
+      }
     }
 
     lastFile = thisFile;
-    return arr;
-  }, []);
+    return nextChain || Promise.resolve();
+  });
 
-  return Promise.all(allCopies)
+  return copiesChain
     .then(() => {
       return new Promise((resolve, reject) => {
         logger.info('Creating video...');
@@ -161,13 +171,13 @@ db.query('SELECT * FROM files ORDER BY created ASC')
       return Promise.reject(Error("No files found!"));
     }
   
-    return Promise.all(allGenerations.map(generationConfig => {
+    return reduceArrayToPromises(allGenerations, (generationConfig) => {
       return makeTempDirectory()
         .then(tempDirectory => {
           logger.info('Temporary directory: ' + tempDirectory);
-          handleGenerationConfig(generationConfig, files, tempDirectory);
+          return handleGenerationConfig(generationConfig, files, tempDirectory);
         });
-    }));
+    });
   })
   .catch(err => {
     logger.error('Error:\n' + err);
