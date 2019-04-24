@@ -21,9 +21,13 @@
       ]
     }
   }],
-  "generateVideo": [{
-    "name": "daily",
-    "interval": "0 12 * * *",
-    "tolerance": 3600
-  }]
+  "generateVideo": {
+    "batchSize": 5,
+    "videos": [{
+      "name": "daily",
+      "interval": "0 12 * * *",
+      "tolerance": 3600,
+      "watermark": true
+    }]
+  }
 }

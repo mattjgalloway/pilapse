@@ -28,7 +28,8 @@ const logger = bunyan.createLogger({
 
 const baseDirectory = config.dropboxBase;
 const sqlFile = path.join(baseDirectory, 'pilapse.sql');
-const allGenerations = config.generateVideo;
+const batchSize = config.generateVideo.batchSize || 5;
+const allGenerations = config.generateVideo.videos;
 
 if (allGenerations.length === 0) {
   logger.error("No video generation configuration! See config.json.example for an example.");
@@ -37,9 +38,18 @@ if (allGenerations.length === 0) {
 
 const db = new Database(sqlFile, logger);
 
-function reduceArrayToPromises(items, reducer) {
-  return items.reduce(
-    (p, item) => p.then(() => reducer(item)),
+function reduceArrayToPromises(items, batched, reducer) {
+  const batchedItems = [];
+  for (let i = 0; i < items.length; i++) {
+    batchedItems.push(items.slice(i, i + (batched ? batchSize : 1)));
+  }
+
+  return batchedItems.reduce(
+    (p, batch) => {
+      return p.then(() => Promise.all(
+        batch.map(item => reducer(item)))
+      )
+    },
     Promise.resolve()
   );
 }
@@ -56,9 +66,10 @@ function makeTempDirectory() {
   });
 }
 
-function copyFile(fromFile, toFile, date) {
+function copyFile(fromFile, toFile, date, watermark) {
   return new Promise((resolve, reject) => {
-    const cmd = 'convert ' + fromFile + ' -font CourierNew -pointsize 20 -fill white -undercolor black -gravity SouthWest -annotate +10+10 "' + date + '" ' + toFile;
+    const watermarkCmd = ' -font CourierNew -pointsize 20 -fill white -undercolor black -gravity SouthWest -annotate +10+10 "' + date + '" ';
+    const cmd = 'convert ' + fromFile + (watermark ? watermarkCmd : " ") + toFile;
     exec(cmd, (err) => {
       if (err) {
         reject(err);
@@ -84,7 +95,7 @@ function handleGenerationConfig(generationConfig, files, tempDirectory) {
   var i = 0;
   var lastFile = files[0];
 
-  const copiesChain = reduceArrayToPromises(files, (thisFile) => {
+  const copiesChain = reduceArrayToPromises(files, true, (thisFile) => {
     const thisDate = Date.parse(thisFile.created);
     const nextNeededDate = Date.parse(next.value);
 
@@ -118,7 +129,8 @@ function handleGenerationConfig(generationConfig, files, tempDirectory) {
         const tmpFilenumber = ("00000000" + i++).slice(-8);
         const tmpFilename = "image" + tmpFilenumber + ".jpg";
         const tmpFile = path.join(tempDirectory, tmpFilename);
-        nextChain = copyFile(localFile, tmpFile, next.value);
+        const watermark = generationConfig.watermark || false;
+        nextChain = copyFile(localFile, tmpFile, next.value, watermark);
       }
     }
 
@@ -171,7 +183,7 @@ db.query('SELECT * FROM files ORDER BY created ASC')
       return Promise.reject(Error("No files found!"));
     }
   
-    return reduceArrayToPromises(allGenerations, (generationConfig) => {
+    return reduceArrayToPromises(allGenerations, false, (generationConfig) => {
       return makeTempDirectory()
         .then(tempDirectory => {
           logger.info('Temporary directory: ' + tempDirectory);
