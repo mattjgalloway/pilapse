@@ -32,7 +32,7 @@
     "request": "^2.88.0",
     "request-promise-native": "^1.0.3",
     "rimraf": "^2.6.1",
-    "sqlite3": "^4.0",
+    "sqlite3": "^4.1",
     "uuid": "^3.0.1"
   },
   "devDependencies": {
